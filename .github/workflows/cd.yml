@@ -1,0 +1,88 @@
+# This workflow will deploy to AWS
+
+name: Deploy to AWS
+
+on:
+  workflow_dispatch
+
+env:
+  SERVICE: saywhat-bootstrap
+  BASEPATH: bootstrap
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: node:12-alpine
+    
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    services:
+      localstack:
+        image: localstack/localstack
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: dynamodb
+          DEFAULT_REGION: eu-west-1
+          DOCKER_HOST: unix:///var/run/docker.sock
+        options: --name localstack
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Cache node modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        # npm cache files are stored in `~/.npm` on Linux/macOS
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Install CLI dependencies
+      run: |
+        apk add zip python3 py3-pip && pip3 install --upgrade pip && pip3 install awscli
+
+    - name: Build and test
+      env:
+        ENVIRONMENT: pipeline
+      run: |
+        npm ci
+        npm run build --if-present
+        npm test
+
+    - name: Create deploy bundle
+      run: |
+        npm prune --production
+        mv node_modules dist/
+        cd dist
+        zip -r dist.zip .
+        echo "CODE_FILE=$SERVICE/$SERVICE-$GITHUB_RUN_ID.zip" >> $GITHUB_ENV
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
+      
+    - name: Upload code to S3
+      run: |
+        echo "Uploading file s3://$S3_BUCKET/$CODE_FILE"
+        aws s3 cp ./dist/dist.zip "s3://$S3_BUCKET/$CODE_FILE"
+
+    # https://github.com/aws-actions/aws-cloudformation-github-deploy
+    - name: Deploy to AWS CloudFormation
+      uses: aws-actions/aws-cloudformation-github-deploy@v1
+      with:
+        name: saywhat-bootstrap
+        template: cloudformation.yml
+        parameter-overrides: "service=${{ env.SERVICE }},codefile=${{ env.CODE_FILE }},basepath=${{ env.BASEPATH }}"
+        no-fail-on-empty-changeset: "1"

@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: saywhat-bootstrap stack
+
+Parameters: 
+  service: 
+    Type: String
+  codefile:
+    Type: String
+  s3bucket:
+    Type: String
+  basepath:
+    Type: String
+
+Resources:
+
+  ApiGatewayRestApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${service}-api
+      ProtocolType: HTTP
+      Tags:
+        - Key: Project
+          Value: saywhat
+
+  ApiGatewayStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      DeploymentId: !Ref ApiGatewayDeployment
+      ApiId: !Ref ApiGatewayRestApi
+      StageName: $default
+      Tags:
+        Project: saywhat
+
+  ApiGatewayApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties: 
+      ApiId: !Ref ApiGatewayRestApi
+      ApiMappingKey: !Sub ${basepath}
+      DomainName: !ImportValue SayWhatCustomDomainName
+      Stage: !Ref ApiGatewayStage
+      Tags:
+        Project: saywhat
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn: 
+      - ApiGatewayIntegration
+    Properties:
+      ApiId: !Ref ApiGatewayRestApi
+      Tags:
+        Project: saywhat
+  
+  ApiGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref ApiGatewayRestApi
+      CredentialsArn: !GetAtt ApiGatewayIamRole.Arn
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations'
+      ConnectionType: INTERNET
+      PassthroughBehavior: WHEN_NO_MATCH
+      TimeoutInMillis: 29000
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      PayloadFormatVersion: '1.0'
+      Tags:
+        Project: saywhat
+
+  ApiGatewayRouteGetStatus:
+    Type: AWS::ApiGatewayV2::Route
+    DependsOn:
+      - ApiGatewayRestApi
+      - LambdaFunction
+      - ApiGatewayIntegration
+    Properties:
+      ApiId: !Ref ApiGatewayRestApi
+      RouteKey: GET /status
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref ApiGatewayIntegration
+      Tags:
+        Project: saywhat
+
+  ApiGatewayRoutePostHello:
+    Type: AWS::ApiGatewayV2::Route
+    DependsOn:
+      - ApiGatewayRestApi
+      - LambdaFunction
+      - ApiGatewayIntegration
+    Properties:
+      ApiId: !Ref ApiGatewayRestApi
+      RouteKey: POST /hello
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref ApiGatewayIntegration
+      Tags:
+        Project: saywhat
+
+  ApiGatewayIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'apigateway.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: LambdaAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 'lambda:*'
+                Resource: !GetAtt LambdaFunction.Arn
+      Tags:
+        - Key: Project
+          Value: saywhat
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !ImportValue SayWhatCodefileBucketName
+        S3Key: !Sub ${codefile}
+      Description: AWS Lambda function
+      FunctionName: !Sub ${service}
+      Handler: api.handler
+      MemorySize: 256
+      Role: !GetAtt LambdaIamRole.Arn
+      Runtime: nodejs12.x
+      Timeout: 60
+      Environment:
+        Variables:
+          BASEPATH: !Sub ${basepath}
+      Tags:
+        - Key: Project
+          Value: saywhat
+
+  LambdaIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Path: '/'
+      Tags:
+        - Key: Project
+          Value: saywhat

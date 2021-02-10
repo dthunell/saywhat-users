@@ -1,0 +1,29 @@
+version: '3.1'
+
+services:
+  api:
+    image: api
+    build: 
+      context: ./
+      dockerfile: Dockerfile
+    container_name: api
+    ports:
+     - "80:80"
+     - "443:443"
+    environment:
+     - NODE_ENV=development
+     - ENVIRONMENT=docker
+    depends_on:
+      - localstack
+    command: ["/wait-for.sh", "localstack:4566", "--", "npm", "test"]
+
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb
+      - DEFAULT_REGION=eu-west-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
