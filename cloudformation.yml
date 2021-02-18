@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: saywhat-bootstrap stack
+Description: saywhat-users stack
 
 Parameters: 
   service: 
@@ -10,6 +10,10 @@ Parameters:
   s3bucket:
     Type: String
   basepath:
+    Type: String
+  passwordsalt:
+    Type: String
+  jwtsecret:
     Type: String
 
 Resources:
@@ -66,7 +70,7 @@ Resources:
       Tags:
         Project: saywhat
 
-  ApiGatewayRouteGetStatus:
+  ApiGatewayRouteLoginUser:
     Type: AWS::ApiGatewayV2::Route
     DependsOn:
       - ApiGatewayRestApi
@@ -74,7 +78,7 @@ Resources:
       - ApiGatewayIntegration
     Properties:
       ApiId: !Ref ApiGatewayRestApi
-      RouteKey: GET /status
+      RouteKey: POST /login
       Target: !Join
         - /
         - - integrations
@@ -82,7 +86,7 @@ Resources:
       Tags:
         Project: saywhat
 
-  ApiGatewayRoutePostHello:
+  ApiGatewayRouteListUsers:
     Type: AWS::ApiGatewayV2::Route
     DependsOn:
       - ApiGatewayRestApi
@@ -90,7 +94,55 @@ Resources:
       - ApiGatewayIntegration
     Properties:
       ApiId: !Ref ApiGatewayRestApi
-      RouteKey: POST /hello
+      RouteKey: GET /
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref ApiGatewayIntegration
+      Tags:
+        Project: saywhat
+
+  ApiGatewayRouteCreateUser:
+    Type: AWS::ApiGatewayV2::Route
+    DependsOn:
+      - ApiGatewayRestApi
+      - LambdaFunction
+      - ApiGatewayIntegration
+    Properties:
+      ApiId: !Ref ApiGatewayRestApi
+      RouteKey: POST /
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref ApiGatewayIntegration
+      Tags:
+        Project: saywhat
+
+  ApiGatewayRouteGetUser:
+    Type: AWS::ApiGatewayV2::Route
+    DependsOn:
+      - ApiGatewayRestApi
+      - LambdaFunction
+      - ApiGatewayIntegration
+    Properties:
+      ApiId: !Ref ApiGatewayRestApi
+      RouteKey: GET /{userId}
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref ApiGatewayIntegration
+      Tags:
+        Project: saywhat
+
+  ApiGatewayRouteUpdateUser:
+    Type: AWS::ApiGatewayV2::Route
+    DependsOn:
+      - ApiGatewayRestApi
+      - LambdaFunction
+      - ApiGatewayIntegration
+    Properties:
+      ApiId: !Ref ApiGatewayRestApi
+      RouteKey: PUT /{userId}
       Target: !Join
         - /
         - - integrations
@@ -142,6 +194,9 @@ Resources:
       Environment:
         Variables:
           BASEPATH: !Sub ${basepath}
+          USER_TABLE_NAME: !ImportValue SayWhatUserTableName
+          PASSWORD_SALT: !Sub ${passwordsalt}
+          JWT_SECRET: !Sub ${jwtsecret}
       Tags:
         - Key: Project
           Value: saywhat

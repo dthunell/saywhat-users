@@ -1,54 +1,61 @@
-import { handler } from "../src/api"
-import { APIGatewayEvent } from 'aws-lambda'
+import { handler } from '../src/api'
+import { hashPassword } from '../src/lib/userHelpers'
+import { createEvent } from './utils/createEvent'
+import { deleteAllItems, createTableIfNotExists, insertItem, countItems } from './utils/dynamoDb'
 
-const event: APIGatewayEvent = {
-    body: null,
-    headers: { },
-    multiValueHeaders: { },
-    httpMethod: 'GET',
-    isBase64Encoded: false,
-    path: '/status',
-    pathParameters: { },
-    queryStringParameters: { },
-    multiValueQueryStringParameters: null,
-    stageVariables: null,
-    requestContext:  {
-        accountId: 'string',
-        apiId: 'string',
-        authorizer: null,
-        protocol: 'GET',
-        httpMethod: 'string',
-        identity: {
-            accessKey: null,
-            accountId: null,            
-            apiKey: null,
-            apiKeyId: null,
-            caller: null,
-            cognitoAuthenticationProvider: null,
-            cognitoAuthenticationType: null,
-            cognitoIdentityId: null,
-            cognitoIdentityPoolId: null,
-            principalOrgId: null,
-            sourceIp: 'string',
-            user: null,
-            userAgent: null,
-            userArn: null,
-        },
-        path: '/status',
-        stage: 'stage',
-        requestId: 'string',
-        requestTimeEpoch: 1,
-        resourceId: 'string',
-        resourcePath: 'string',
-    },
-    resource: ''
+const USER_ONE = {
+ username: 'a',
+ password: 'a',
+ passwordHash: hashPassword('a')
 }
 
-describe("Basic test", () => {
-    it("should return ok", async () => {
-        const { body, statusCode } = await handler(event)
-        const { status } = JSON.parse(body)
-        expect(statusCode).toBe(200)
-        expect(status).toEqual('ok')
+const USER_TWO = {
+  username: 'b',
+  password: 'b',
+  passwordHash: hashPassword('b')
+}
+
+describe('Saywhat - Users', () => {
+  beforeAll(async () => {
+    await createTableIfNotExists()
+    await insertItem(USER_ONE)
+    await insertItem(USER_TWO)
+  })
+
+  afterEach(async () => {
+    await deleteAllItems()
+  })
+
+  describe('Create user', () => {
+    it('should not be able to create user without username', async () => {
+      const itemsBefore = await countItems()
+      const body = {
+        password: 'pwd'
+      }
+      const event = createEvent('POST', '/users', undefined, body)
+      const { statusCode } = await handler(event)
+      const itemsAfter = await countItems()
+      expect(statusCode).toBe(200)
+      expect(itemsBefore).toEqual(itemsAfter)
     })
+
+    // it('should not be able to create user without password', () => {})
+    // it('should be able to create user', () => {})
+    // it('should not be able to create user twice', () => {})
+  })
+
+  // describe('Login user', () => {})
+
+  // describe('List users', () => {})
+
+  // describe('Show user', () => {})
+
+  // describe('Update user', () => {})
+
+  // it("should return ok", async () => {
+  //   const { body, statusCode } = await handler(event)
+  //   const { status } = JSON.parse(body)
+  //   expect(statusCode).toBe(200)
+  //   expect(status).toEqual('ok')
+  // })
 })

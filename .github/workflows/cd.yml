@@ -6,8 +6,8 @@ on:
   workflow_dispatch
 
 env:
-  SERVICE: saywhat-bootstrap
-  BASEPATH: bootstrap
+  SERVICE: saywhat-users
+  BASEPATH: users
 
 jobs:
   build:
@@ -84,5 +84,5 @@ jobs:
       with:
         name: saywhat-bootstrap
         template: cloudformation.yml
-        parameter-overrides: "service=${{ env.SERVICE }},codefile=${{ env.CODE_FILE }},basepath=${{ env.BASEPATH }}"
+        parameter-overrides: "service=${{ env.SERVICE }},codefile=${{ env.CODE_FILE }},basepath=${{ env.BASEPATH }},passwordsalt=${{ secrets.PASSWORD_SALT }},jwtsecret=${{ secrets.JWT_SECRET }}"
         no-fail-on-empty-changeset: "1"

@@ -13,6 +13,9 @@ services:
     environment:
      - NODE_ENV=development
      - ENVIRONMENT=docker
+     - PASSWORD_SALT=passwordsalt
+     - USER_TABLE_NAME=usertable
+     - JWT_SECRET=jwtsecret
     depends_on:
       - localstack
     command: ["/wait-for.sh", "localstack:4566", "--", "npm", "test"]
