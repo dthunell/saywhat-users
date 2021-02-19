@@ -6,7 +6,7 @@ const event: APIGatewayEvent = {
     multiValueHeaders: { },
     httpMethod: 'GET',
     isBase64Encoded: false,
-    path: '/status',
+    path: 'string',
     pathParameters: { },
     queryStringParameters: { },
     multiValueQueryStringParameters: null,
@@ -33,7 +33,7 @@ const event: APIGatewayEvent = {
             userAgent: null,
             userArn: null,
         },
-        path: '/status',
+        path: 'string',
         stage: 'stage',
         requestId: 'string',
         requestTimeEpoch: 1,
@@ -44,7 +44,7 @@ const event: APIGatewayEvent = {
 }
 
 export const createEvent = (method: string, path: string, queryStringParameters?: any, body?: any): APIGatewayEvent => {
-  const e = { ...event}
+  const e = { ...event }
   e.path = path
   e.requestContext.path = path
   e.httpMethod = method

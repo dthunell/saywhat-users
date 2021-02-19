@@ -19,6 +19,4 @@ if (ENVIRONMENT === 'docker') {
   }
 }
 
-
-
 export const dynamoDbConfig = config

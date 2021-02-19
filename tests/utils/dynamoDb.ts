@@ -1,4 +1,4 @@
-import * as DynamoDB from 'aws-sdk/clients/dynamodb'
+import DynamoDB from 'aws-sdk/clients/dynamodb'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { dynamoDbConfig } from '../../src/lib/dynamoDbConfig'
 
@@ -7,7 +7,7 @@ const documentClient = new DocumentClient(dynamoDbConfig)
 
 const { USER_TABLE_NAME: TableName } = process.env
 
-export const deleteAllItems = async () => {
+export const deleteAllItems = async (): Promise<void> => {
   const { Items } = await documentClient.scan({ TableName }).promise()
   for (const item of Items) {
     const deleteParams = {
@@ -21,39 +21,36 @@ export const deleteAllItems = async () => {
   }
 }
 
-export const createTableIfNotExists = async () => {
-  const { Table } = await dynamodb.describeTable({ TableName }).promise()
+export const createTableIfNotExists = async (): Promise<void> => {
+   try {
+    // const { Table } = await dynamodb.describeTable({ TableName }).promise()
 
-  if (!Table) {
-    const params = {
-      AttributeDefinitions: [
-        {
-          AttributeName: 'username',
-          AttributeType: 'S'
-        },
-        {
-          AttributeName: 'name',
-          AttributeType: 'S'
-        },
-        {
-          AttributeName: 'passwordHash',
-          AttributeType: 'S'
-        }
-      ],
-      KeySchema: [
-        {
-          AttributeName: 'username',
-          KeyType: 'HASH'
-        }
-      ],
-      BillingMode: 'PAY_PER_REQUEST',
-      TableName
-    }
-    await dynamodb.createTable(params).promise()
-  }
+    // if (!Table) {
+      const params = {
+        AttributeDefinitions: [
+          {
+            AttributeName: 'username',
+            AttributeType: 'S'
+          }
+        ],
+        KeySchema: [
+          {
+            AttributeName: 'username',
+            KeyType: 'HASH'
+          }
+        ],
+        BillingMode: 'PAY_PER_REQUEST',
+        TableName
+      }
+      await dynamodb.createTable(params).promise()
+   // }
+   } catch (error) {
+     console.error(error)
+     process.exit(1)
+   }
 }
 
-export const insertItem = async (Item): Promise<void> => {
+export const insertItem = async (Item: any): Promise<void> => {
   await documentClient.put({
     TableName,
     Item

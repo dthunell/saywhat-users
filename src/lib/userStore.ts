@@ -1,7 +1,7 @@
 import { dynamoDbConfig } from './dynamoDbConfig'
 import { DocumentClient, QueryInput, Key } from 'aws-sdk/clients/dynamodb'
 import { User } from '../types/User'
-import { isUser, mapUser } from './userHelpers'
+import { isUser, mapUser, hashPassword } from './userHelpers'
 import { SayWhatError } from './error'
 
 const { USER_TABLE_NAME: TableName } = process.env
