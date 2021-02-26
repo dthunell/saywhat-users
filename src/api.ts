@@ -35,8 +35,6 @@ api.get('/', authenticationMiddleware, listUsers)
 api.get('/:username', authenticationMiddleware, showUser)
 api.put('/:username', authenticationMiddleware, updateUserHandler)
 
-api.use()
-
 export const handler = async (event: APIGatewayEvent, context?: Context) => {
   return await api.run(event, context)
 }

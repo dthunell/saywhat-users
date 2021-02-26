@@ -78,7 +78,7 @@ describe('Saywhat - Users', () => {
       const event = createEvent('POST', '/', undefined, body)
       const { statusCode } = await handler(event)
       const itemsAfter = await countItems()
-      expect(statusCode).toBe(200)
+      expect(statusCode).toBe(302)
       expect(itemsAfter).toEqual(itemsBefore+1)
     })
 
@@ -91,14 +91,14 @@ describe('Saywhat - Users', () => {
         email: `email-${now}`
       }
       const event = createEvent('POST', '/', undefined, body)
-      const { statusCodeOne } = await handler(event)
+      const { statusCode: statusCodeOne } = await handler(event)
       const itemsAfterOne = await countItems()
-      expect(statusCodeOne).toBe(200)
+      expect(statusCodeOne).toBe(302)
       expect(itemsAfterOne).toEqual(itemsBefore+1)
 
-      const { statusCodeTwo } = await handler(event)
+      const { statusCode: statusCodeTwo } = await handler(event)
       const itemsAfterTwo = await countItems()
-      expect(statusCodeTwo).toBe(200)
+      expect(statusCodeTwo).toBe(400)
       expect(itemsAfterTwo).toEqual(itemsBefore+1)
     })
   })

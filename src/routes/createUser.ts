@@ -8,8 +8,10 @@ export const createUserHandler: HandlerFunction = async (req, res) => {
     if (req.body.password) {
       req.body.passwordHash = hashPassword(req.body.password)
     }
+    req.body.active = true // New users are active by default
+
     await createUser(req.body)
-    return res.redirect(201, `/users/${req.body.username}`)
+    return res.redirect(`/users/${req.body.username}`)
   } catch (error) {
     if (error instanceof SayWhatError) {
       return res.status(error.statusCode).json({ errorMessage: error.message })

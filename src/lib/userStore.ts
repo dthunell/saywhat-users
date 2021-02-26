@@ -7,6 +7,10 @@ import { SayWhatError } from './error'
 const { USER_TABLE_NAME: TableName } = process.env
 const dynamodb = new DocumentClient(dynamoDbConfig)
 
+const removeEmpty = (obj: any) => {
+  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null));
+}
+
 const recursiveGetUsers = async (users: User[] = [], lastEvaluatedKey?: Key): Promise<User[]> => {
   const params: QueryInput = {
     TableName,
@@ -42,7 +46,7 @@ export const getUser = async (username: string): Promise<User> => {
     const { Item } = await dynamodb.get(params).promise()
 
     if (!Item) {
-      console.log('No match found in db for username', username)
+      console.info('No match found in db for username', username)
       throw new SayWhatError('Not found', 404)
     }
 
@@ -62,11 +66,10 @@ export const createUser = async (user: unknown): Promise<void> => {
     throw new SayWhatError('Invalid userobject provided', 400)
   }
 
-  user.active = true // New users are active by default
-
+  const mappedUser = mapUser(user)
   const params: DocumentClient.PutItemInput = {
     TableName,
-    Item: mapUser(user),
+    Item: removeEmpty(mappedUser),
     ConditionExpression: 'username <> :username',
     ExpressionAttributeValues: {
       ':username': user.username
@@ -76,11 +79,11 @@ export const createUser = async (user: unknown): Promise<void> => {
   try {
     await dynamodb.put(params).promise()
   } catch (error) {
-    if (error instanceof SayWhatError) {
-      throw error
+    const errorMessage = error.message || error
+    console.error('Error creating user', { errorMessage, params })
+    if (errorMessage === 'The conditional request failed') {
+      throw new SayWhatError('Cannot create user, user already exists', 400)
     }
-
-    console.error(error.message || error)
     throw new SayWhatError('Cannot create user, failed to write to database', 500)
   }
 }
@@ -101,7 +104,7 @@ export const updateUser = async (username: string, userdata: any): Promise<void>
   try {
     await dynamodb.update(params).promise()
   } catch (error) {
-    console.error(error.message || error)
+    console.error('Error updating user', { errorMessage: error.message || error, params })
     throw new SayWhatError('Cannot update user, failed to write to database', 500)
   }
 }
@@ -119,7 +122,7 @@ export const changePassword = async (username: string, passwordHash: string): Pr
   try {
     await dynamodb.update(params).promise()
   } catch (error) {
-    console.error(error.message || error)
+    console.error('Error updating password on user', { errorMessage: error.message || error, params })
     throw new SayWhatError('Cannot update password, failed to write to database', 500)
   }
 }

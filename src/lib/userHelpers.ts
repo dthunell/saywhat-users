@@ -14,10 +14,10 @@ export const mapUser = (user: any): User => {
   return {
     username: user.username,
     passwordHash: user.passwordHash,
-    email: user.email,
-    name: user.name,
-    imageUrl: user.imageUrl,
-    active: user.active
+     email: user.email,
+     name: user.name,
+     imageUrl: user.imageUrl,
+     active: user.active
   }
 }
 
