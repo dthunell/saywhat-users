@@ -31,6 +31,9 @@ jobs:
           SERVICES: dynamodb
           DEFAULT_REGION: eu-west-1
           DOCKER_HOST: unix:///var/run/docker.sock
+          # Required so that resource urls are provided properly 
+          # e.g sqs url will get localhost if we don't set this env to map our service
+          HOSTNAME_EXTERNAL: localstack 
         options: --name localstack
 
     steps:
