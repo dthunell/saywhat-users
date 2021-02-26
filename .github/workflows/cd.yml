@@ -15,11 +15,11 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: node:12-alpine
+    container: node:14-alpine
     
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
 
     services:
       localstack:
