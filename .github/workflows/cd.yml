@@ -8,6 +8,9 @@ on:
 env:
   SERVICE: saywhat-users
   BASEPATH: users
+  PASSWORD_SALT: ${{ secrets.PASSWORD_SALT }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  USER_TABLE_NAME: ${{ secrets.USER_TABLE_NAME }}
 
 jobs:
   build:
