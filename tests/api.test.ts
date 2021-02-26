@@ -35,7 +35,7 @@ describe('Saywhat - Users', () => {
       const body = {
         password: 'pwd'
       }
-      const event = createEvent('POST', '/', undefined, body)
+      const event = createEvent('POST', '/users', undefined, body)
       const { statusCode } = await handler(event)
       const itemsAfter = await countItems()
       expect(statusCode).toBe(400)
@@ -47,7 +47,7 @@ describe('Saywhat - Users', () => {
       const body = {
         username: 'username'
       }
-      const event = createEvent('POST', '/', undefined, body)
+      const event = createEvent('POST', '/users', undefined, body)
       const { statusCode } = await handler(event)
       const itemsAfter = await countItems()
       expect(statusCode).toBe(400)
@@ -60,7 +60,7 @@ describe('Saywhat - Users', () => {
         username: 'username',
         password: 'password'
       }
-      const event = createEvent('POST', '/', undefined, body)
+      const event = createEvent('POST', '/users', undefined, body)
       const { statusCode } = await handler(event)
       const itemsAfter = await countItems()
       expect(statusCode).toBe(400)
@@ -75,7 +75,7 @@ describe('Saywhat - Users', () => {
         password: `pwd-${now}`,
         email: `email-${now}`
       }
-      const event = createEvent('POST', '/', undefined, body)
+      const event = createEvent('POST', '/users', undefined, body)
       const { statusCode } = await handler(event)
       const itemsAfter = await countItems()
       expect(statusCode).toBe(302)
@@ -90,7 +90,7 @@ describe('Saywhat - Users', () => {
         password: `pwd-${now}`,
         email: `email-${now}`
       }
-      const event = createEvent('POST', '/', undefined, body)
+      const event = createEvent('POST', '/users', undefined, body)
       const { statusCode: statusCodeOne } = await handler(event)
       const itemsAfterOne = await countItems()
       expect(statusCodeOne).toBe(302)

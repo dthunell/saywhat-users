@@ -8,7 +8,7 @@
     "compile": "./node_modules/.bin/tsc --build tsconfig.json",
     "lint": "eslint \"**/*.ts\" --quiet --fix",
     "start": "node dist/api.js",
-    "test": "jest --coverage --verbose --runInBand --useStderr",
+    "test": "jest --coverage --silent --runInBand --useStderr",
     "docker-test": "docker-compose up --build --abort-on-container-exit"
   },
   "author": "Daniel Thunell",

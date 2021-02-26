@@ -4,6 +4,7 @@ import { User } from '../types/User'
 import { isUser, mapUser, hashPassword } from './userHelpers'
 import { SayWhatError } from './error'
 
+const AWS_DYNAMODB_CONDITION_FAILED_ERROR = 'The conditional request failed'
 const { USER_TABLE_NAME: TableName } = process.env
 const dynamodb = new DocumentClient(dynamoDbConfig)
 
@@ -32,7 +33,7 @@ const recursiveGetUsers = async (users: User[] = [], lastEvaluatedKey?: Key): Pr
   return accumulatedUsers
 }
 
-export const getUsers = () => recursiveGetUsers
+export const getUsers = (): Promise<User[]> => recursiveGetUsers()
 
 export const getUser = async (username: string): Promise<User> => {
   const params: DocumentClient.GetItemInput = {
@@ -81,7 +82,7 @@ export const createUser = async (user: unknown): Promise<void> => {
   } catch (error) {
     const errorMessage = error.message || error
     console.error('Error creating user', { errorMessage, params })
-    if (errorMessage === 'The conditional request failed') {
+    if (errorMessage === AWS_DYNAMODB_CONDITION_FAILED_ERROR) {
       throw new SayWhatError('Cannot create user, user already exists', 400)
     }
     throw new SayWhatError('Cannot create user, failed to write to database', 500)
