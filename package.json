@@ -25,14 +25,16 @@
       "!**/docs/**"
     ],
     "testEnvironment": "node",
-    "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
+    "testMatch": [
+      "**/?(*.)+(spec|test).[jt]s?(x)"
+    ],
     "transform": {
       "^.+\\.ts?$": "ts-jest"
     }
   },
   "dependencies": {
-    "axios": "^0.21.1",
-    "jsonwebtoken": "^8.5.1",
+    "axios": "^1.5.0",
+    "jsonwebtoken": "^9.0.2",
     "lambda-api": "^0.10.6"
   },
   "devDependencies": {
